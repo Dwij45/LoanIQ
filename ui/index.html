@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoanIQ — Rule-based loan eligibility</title>
+<style>
+  :root{
+    --cream:#eae8e0; --cream2:#f4f3ee; --ink:#141414; --ink2:#1e1e1e;
+    --line:#141414; --muted:#6b6b63; --muted2:#9a9a91;
+    --orange:#f5a623; --orange2:#ff7a1a; --green:#3fb95f; --red:#e4573d;
+    --dot:#d9d7cc;
+  }
+  *{box-sizing:border-box;}
+  html{scrollbar-width:thin;scrollbar-color:#c8c6ba var(--cream);}
+  html::-webkit-scrollbar{width:11px;}
+  html::-webkit-scrollbar-track{background:var(--cream);}
+  html::-webkit-scrollbar-thumb{background:#c8c6ba;border-radius:6px;border:2.5px solid var(--cream);}
+  html::-webkit-scrollbar-thumb:hover{background:#b0ac9c;}
+  html,body{margin:0;background:var(--cream);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;}
+  body{
+    background-image:radial-gradient(var(--dot) 1.4px, transparent 1.4px);
+    background-size:22px 22px;
+  }
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 24px;}
+
+  /* nav */
+  nav{background:var(--cream2);border-bottom:1.5px solid var(--line);}
+  .navrow{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1100px;margin:0 auto;}
+  .logo{font-weight:900;font-size:22px;letter-spacing:-0.02em;}
+  .navlinks{display:flex;gap:28px;font-size:14px;color:var(--ink);font-weight:500;}
+  .navlinks span{opacity:.55;}
+  .pill-btn{display:inline-block;border:1.5px solid var(--line);border-radius:999px;
+    padding:9px 20px;font-size:12.5px;font-weight:700;letter-spacing:.03em;cursor:pointer;
+    background:var(--orange);color:var(--ink);text-decoration:none;}
+  .pill-btn.outline{background:transparent;}
+  .pill-btn.green{background:var(--green);border-color:var(--ink);}
+  .pill-btn.dark{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  /* hero */
+  header{text-align:center;padding:84px 0 48px;position:relative;}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--line);
+    border-radius:999px;padding:6px 14px 6px 16px;font-size:12px;font-weight:700;
+    letter-spacing:.04em;background:var(--cream2);margin-bottom:28px;}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--orange2);}
+  h1{font-size:clamp(34px,6vw,64px);line-height:1;letter-spacing:-0.01em;margin:0 0 20px;
+    font-weight:900;text-transform:uppercase;}
+  .sub{font-size:17px;color:var(--muted);max-width:620px;margin:0 auto 32px;line-height:1.55;}
+  .bankchips{display:flex;flex-wrap:wrap;gap:8px;}
+  .bankchip{border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-size:12.5px;
+    font-weight:700;cursor:pointer;background:#fff;}
+  .bankchip:hover{background:var(--orange);}
+  .bankchip.active{background:var(--ink);color:#fff;}
+  .bank-detail-box{margin-top:18px;border:1.5px solid var(--line);border-radius:14px;
+    padding:18px 20px;background:#fff;display:none;}
+  .bank-detail-box .bd-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+  .bank-detail-box .bd-head .nm{font-size:17px;font-weight:800;}
+  .bank-detail-box .bd-head .ty{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+  .bd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;}
+  .bd-grid .f{background:var(--cream2);border:1px solid #d7d5cb;border-radius:9px;padding:9px 12px;}
+  .bd-grid .f .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .bd-grid .f .v{font-size:14.5px;font-weight:800;margin-top:2px;}
+
+  /* stat strip */
+  .statstrip{display:grid;grid-template-columns:repeat(3,1fr);border:1.5px solid var(--line);
+    border-radius:18px;overflow:hidden;background:var(--cream2);margin:48px 0;}
+  .statstrip .cell{padding:22px 16px;text-align:center;border-right:1.5px solid var(--line);}
+  .statstrip .cell:last-child{border-right:none;}
+  .statstrip .n{font-size:26px;font-weight:900;}
+  .statstrip .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+
+  /* connector */
+  .connector{display:flex;justify-content:center;margin:0 0;}
+  .connector .line{width:1.5px;height:38px;background:var(--line);}
+  .connector .node{width:13px;height:13px;border-radius:50%;background:var(--ink);margin:-6px auto;
+    border:3px solid var(--cream);}
+
+  /* two-col dark/light combo */
+  .duo{display:grid;grid-template-columns:1.15fr 0.85fr;gap:0;border:1.5px solid var(--line);
+    border-radius:20px;overflow:hidden;margin-bottom:0;}
+  .duo .panel-dark{background:#0c0c0c;color:#eee;padding:26px 26px 22px;}
+  .duo .panel-light{background:#f7eee0;color:var(--ink);padding:30px;display:flex;flex-direction:column;justify-content:center;
+    border-left:1.5px solid var(--line);}
+  .duo-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .duo-head h3{font-size:14px;margin:0;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#ddd;}
+  .live-pill{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;
+    letter-spacing:.05em;color:#8be09a;text-transform:uppercase;}
+  .live-pill .dot{width:6px;height:6px;border-radius:50%;background:#2ecc66;
+    box-shadow:0 0 0 0 rgba(46,204,102,.6);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(46,204,102,.55);}70%{box-shadow:0 0 0 7px rgba(46,204,102,0);}100%{box-shadow:0 0 0 0 rgba(46,204,102,0);}}
+  .duo .panel-light h3{font-size:19px;margin:0 0 8px;font-weight:800;color:var(--ink);}
+  .duo .panel-light p{color:#5a5447;font-size:14px;line-height:1.55;margin:0 0 16px;}
+  .trace-win{background:#0a0a0a;border:1px solid #262626;border-radius:10px;overflow:hidden;}
+  .trace-bar{display:flex;gap:6px;padding:9px 12px;background:#161616;border-bottom:1px solid #262626;}
+  .trace-bar span{width:9px;height:9px;border-radius:50%;}
+  .trace-bar .r{background:#ff5f56;} .trace-bar .y{background:#ffbd2e;} .trace-bar .g{background:#27c93f;}
+  .trace{padding:14px 16px;font-size:12.5px;line-height:1.85;max-height:210px;overflow-y:auto;
+    scrollbar-width:thin;scrollbar-color:#3a3a3a #0a0a0a;}
+  .trace::-webkit-scrollbar{width:7px;}
+  .trace::-webkit-scrollbar-track{background:#0a0a0a;}
+  .trace::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:4px;}
+  .trace::-webkit-scrollbar-thumb:hover{background:#4a4a4a;}
+  .trace div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .trace .prompt{color:#4a4a4a;}
+  .trace .t{color:var(--orange);font-weight:600;}
+  .trace .ok{color:#4ade80;font-weight:700;}
+  .trace .no{color:#f87171;font-weight:700;}
+  .trace .k{color:#777;}
+  @media(max-width:760px){.duo{grid-template-columns:1fr;}.duo .panel-light{border-left:none;border-top:1.5px solid var(--line);}}
+  .presets{display:flex;flex-direction:column;gap:7px;max-height:230px;overflow-y:auto;padding-right:4px;
+    scrollbar-width:thin;scrollbar-color:#cfccc0 transparent;}
+  .presets::-webkit-scrollbar{width:7px;}
+  .presets::-webkit-scrollbar-track{background:transparent;}
+  .presets::-webkit-scrollbar-thumb{background:#cfccc0;border-radius:4px;}
+  .presets::-webkit-scrollbar-thumb:hover{background:#b8b4a4;}
+  .preset-btn{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:9px 12px;
+    cursor:pointer;font-size:12.5px;font-weight:700;text-align:left;}
+  .preset-btn:hover{background:var(--orange);}
+  .preset-btn .pid{color:var(--muted);font-weight:600;font-size:11px;}
+
+  /* form card */
+  .card{background:var(--cream2);border:1.5px solid var(--line);border-radius:20px;padding:30px;margin-top:0;}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    margin:0 0 20px;font-weight:800;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+  label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.02em;}
+  input,select{width:100%;background:#fff;border:1.5px solid var(--line);color:var(--ink);
+    padding:10px 12px;border-radius:9px;font-size:14px;font-family:inherit;}
+  input:focus,select:focus{outline:none;border-color:var(--orange2);}
+  .scope-note{background:#fdf0dd;border:1.5px solid var(--orange2);color:#7a4a0f;border-radius:10px;
+    padding:12px 14px;font-size:13px;margin-top:16px;display:none;}
+  .run-row{margin-top:24px;display:flex;justify-content:flex-end;}
+
+  /* results row: cost breakdown + analytics */
+  .resgrid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1.5px solid var(--line);
+    border-radius:20px;overflow:hidden;}
+  .resgrid > div{padding:30px;}
+  .resgrid > div:first-child{border-right:1.5px solid var(--line);background:var(--cream2);}
+  .resgrid h3{font-size:19px;font-weight:800;margin:0 0 20px;}
+  .costline{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed #bcbab0;
+    font-size:14px;}
+  .costline.total{border-bottom:none;border-top:1.5px solid var(--line);margin-top:6px;
+    padding-top:14px;font-weight:900;font-size:17px;}
+  .costline .lbl{color:var(--muted);}
+  .costline.total .lbl{color:var(--ink);}
+  .bestpick{margin-top:20px;display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:12px 16px;}
+  .bestpick .name{font-weight:800;font-size:15px;}
+  .bestpick .meta{font-size:12px;color:var(--muted);}
+
+  .badges{display:flex;gap:10px;margin-bottom:20px;}
+  .badge{flex:1;border-radius:12px;padding:12px 14px;border:1.5px solid var(--line);}
+  .badge.g{background:#e4f6e8;}
+  .badge.r{background:#fbe6e1;}
+  .badge .n{font-size:22px;font-weight:900;}
+  .badge .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:2px;}
+  .bars .barrow{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:12.5px;}
+  .bars .barrow .id{width:72px;flex-shrink:0;font-weight:700;}
+  .bars .track{flex:1;height:9px;background:#fff;border:1px solid var(--line);border-radius:5px;overflow:hidden;}
+  .bars .fill{height:100%;background:linear-gradient(90deg,var(--orange2),var(--orange));}
+  .bars .cost{width:78px;text-align:right;color:var(--muted);flex-shrink:0;}
+
+  /* eligible table */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:0;}
+  th{text-align:left;color:var(--muted);font-weight:700;font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.04em;padding:10px;border-bottom:1.5px solid var(--line);}
+  td{padding:13px 10px;border-bottom:1px solid #d7d5cb;}
+  tr:last-child td{border-bottom:none;}
+  .rank{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+    border-radius:50%;background:#fff;border:1.5px solid var(--line);font-weight:800;font-size:12px;}
+  tr:first-child .rank{background:var(--orange);}
+  .lender{font-weight:800;}
+  .flag{display:inline-block;font-size:10.5px;background:#fdf0dd;color:#7a4a0f;border:1px solid var(--orange2);
+    border-radius:5px;padding:2px 7px;margin:3px 3px 0 0;}
+
+  details{margin-top:0;}
+  summary{cursor:pointer;color:var(--muted);font-size:13px;font-weight:700;padding:14px 0;
+    text-transform:uppercase;letter-spacing:.03em;}
+  .reject-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #d7d5cb;
+    font-size:13px;}
+  .reject-row .id{font-weight:800;min-width:110px;}
+  .reject-row .why{color:var(--muted);text-align:right;flex:1;margin-left:16px;}
+
+  footer{background:var(--ink);color:#8a8a84;text-align:center;padding:36px 24px;margin-top:70px;
+    font-size:12px;line-height:1.7;}
+  footer code{color:#ccc;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="navrow">
+    <div class="logo">LoanIQ</div>
+    <div class="navlinks">
+      <span>Model</span><span>Data</span><span>Lenders</span><span>Docs</span>
+    </div>
+    <a class="pill-btn" href="#form">RUN CHECK</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="dot"></span> RULE-BASED · NOT ML · BETA</div>
+    <h1>Loan eligibility<br>for humans, not black boxes.</h1>
+    <p class="sub">20 Indian lenders, 184 sourced rules, one honest ranking — by total cost,
+      not advertised rate. Every number traces back to a real rule or a clearly flagged estimate.</p>
+  </header>
+
+  <div class="statstrip">
+    <div class="cell"><div class="n">20</div><div class="l">Lenders</div></div>
+    <div class="cell"><div class="n">184</div><div class="l">Sourced rules</div></div>
+    <div class="cell"><div class="n">4</div><div class="l">Pipeline stages</div></div>
+  </div>
+
+  <div class="connector"><div class="line"></div></div>
+
+  <div class="card">
+    <h2>Lenders in this dataset</h2>
+    <div class="bankchips" id="bankChips"></div>
+    <div id="bankDetail"></div>
+  </div>
+
+  <div class="connector"><div class="line"></div></div>
+  <div class="duo" id="trace">
+    <div class="panel-dark">
+      <div class="duo-head">
+        <h3>Rule trace</h3>
+        <span class="live-pill"><span class="dot"></span>Live</span>
+      </div>
+      <div class="trace-win">
+        <div class="trace-bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        <div class="trace mono" id="traceBox"></div>
+      </div>
+    </div>
+    <div class="panel-light">
+      <h3>Try a test profile</h3>
+      <p>11 real edge cases from the model's own test suite — click one to load it
+        into the form and see exactly why it passes or fails.</p>
+      <div class="presets" id="presets"></div>
+    </div>
+  </div>
+
+  <div class="connector"><div class="line"></div><div class="node"></div><div class="line"></div></div>
+
+  <div class="card" id="form">
+    <h2>Applicant profile</h2>
+    <div class="grid" id="form_fields"></div>
+    <div class="scope-note" id="scopeNote">
+      This model only covers <strong>salaried</strong> applicants — self-employed income is
+      reported via annual ITR, not monthly salary slips, and none of the 20 lenders' collected
+      rules include a parallel self-employed rule set. Switch employment type back to
+      "Salaried" to see results.
+    </div>
+    <div class="run-row"><a class="pill-btn green" onclick="runEngine(true)" style="padding:13px 28px;font-size:13px;">RUN ELIGIBILITY CHECK</a></div>
+  </div>
+
+  <div class="connector"><div class="line"></div></div>
+
+  <div id="resultsBlock">
+    <div class="resgrid">
+      <div>
+        <h3>How much will this loan cost?</h3>
+        <div class="costline"><span class="lbl">Principal (offered)</span><span id="cPrincipal">—</span></div>
+        <div class="costline"><span class="lbl">Interest over tenure</span><span id="cInterest">—</span></div>
+        <div class="costline"><span class="lbl">Processing fee</span><span id="cFee">—</span></div>
+        <div class="costline total"><span class="lbl">Total cost</span><span id="cTotal">—</span></div>
+        <div class="bestpick" id="bestPick" style="display:none;">
+          <div><div class="name" id="bpName">—</div><div class="meta" id="bpMeta">—</div></div>
+          <span class="pill-btn green" style="font-size:11px;padding:7px 14px;">BEST MATCH</span>
+        </div>
+      </div>
+      <div>
+        <h3>Eligibility at a glance</h3>
+        <div class="badges">
+          <div class="badge g"><div class="n" id="statEligible">–</div><div class="l">Eligible</div></div>
+          <div class="badge r"><div class="n" id="statRejected">–</div><div class="l">Rejected</div></div>
+        </div>
+        <div class="bars" id="barsBox"></div>
+      </div>
+    </div>
+
+    <div class="connector"><div class="line"></div></div>
+
+    <div class="card">
+      <h2>Ranked offers</h2>
+      <table>
+        <thead><tr><th></th><th>Lender</th><th>Offered</th><th>Rate</th><th>Tenure</th><th>EMI</th><th>Total cost</th></tr></thead>
+        <tbody id="eligibleTable"></tbody>
+      </table>
+      <details>
+        <summary id="rejectSummary">Show rejected lenders & reasons</summary>
+        <div id="rejectList"></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Client-side only — nothing you enter leaves this page. Model &amp; data:
+  <code>src/eligibility.py</code> · <code>data/lenders.csv</code> · <code>data/rules.csv</code>.
+  See <code>docs/limitations.md</code> for every estimated field and modeling decision.
+</footer>
+
+<script>
+const DATA = {"lenders": {"SBI": {"lender_id": "SBI", "lender_name": "State Bank of India", "lender_type": "psu_bank", "min_loan": 100000.0, "max_loan": 5000000.0, "min_tenure_months": 6.0, "max_tenure_months": 84.0, "rate_min_pct": 10.0, "rate_max_pct": 15.0, "processing_fee_pct": 1.5}, "HDFC": {"lender_id": "HDFC", "lender_name": "HDFC Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 3000000.0, "min_tenure_months": 12.0, "max_tenure_months": 60.0, "rate_min_pct": 9.99, "rate_max_pct": 24.0, "processing_fee_pct": 4.0}, "ICICI": {"lender_id": "ICICI", "lender_name": "ICICI Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 5000000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 9.99, "rate_max_pct": 16.25, "processing_fee_pct": 2.5}, "AXIS": {"lender_id": "AXIS", "lender_name": "Axis Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 5000000.0, "min_tenure_months": 12.0, "max_tenure_months": 84.0, "rate_min_pct": 9.99, "rate_max_pct": 21.0, "processing_fee_pct": 2.0}, "KOTAK": {"lender_id": "KOTAK", "lender_name": "Kotak Mahindra Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 10000000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 10.99, "rate_max_pct": 25.0, "processing_fee_pct": 5.0}, "IDFC": {"lender_id": "IDFC", "lender_name": "IDFC FIRST Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 1500000.0, "min_tenure_months": 9.0, "max_tenure_months": 60.0, "rate_min_pct": 10.99, "rate_max_pct": 38.0, "processing_fee_pct": 3.5}, "INDUSIND": {"lender_id": "INDUSIND", "lender_name": "IndusInd Bank", "lender_type": "private_bank", "min_loan": 30000.0, "max_loan": 5000000.0, "min_tenure_months": 12.0, "max_tenure_months": 84.0, "rate_min_pct": 10.49, "rate_max_pct": 30.0, "processing_fee_pct": 2.0}, "HSBC": {"lender_id": "HSBC", "lender_name": "HSBC India", "lender_type": "private_bank", "min_loan": 1000000.0, "max_loan": 5000000.0, "min_tenure_months": 6.0, "max_tenure_months": 60.0, "rate_min_pct": 9.95, "rate_max_pct": 10.5, "processing_fee_pct": 2.0}, "FEDERAL": {"lender_id": "FEDERAL", "lender_name": "Federal Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 2500000.0, "min_tenure_months": 12.0, "max_tenure_months": 48.0, "rate_min_pct": 11.99, "rate_max_pct": 17.99, "processing_fee_pct": 3.0}, "BOB": {"lender_id": "BOB", "lender_name": "Bank of Baroda", "lender_type": "psu_bank", "min_loan": 50000.0, "max_loan": 1500000.0, "min_tenure_months": 36.0, "max_tenure_months": 60.0, "rate_min_pct": 10.65, "rate_max_pct": 16.3, "processing_fee_pct": 2.0}, "PNB": {"lender_id": "PNB", "lender_name": "Punjab National Bank", "lender_type": "psu_bank", "min_loan": 25000.0, "max_loan": 2000000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 10.85, "rate_max_pct": 12.85, "processing_fee_pct": 1.0}, "UNION": {"lender_id": "UNION", "lender_name": "Union Bank of India", "lender_type": "psu_bank", "min_loan": null, "max_loan": 1500000.0, "min_tenure_months": 9.3, "max_tenure_months": 12.6, "rate_min_pct": 10.0, "rate_max_pct": 24.0, "processing_fee_pct": 0.5}, "YESBANK": {"lender_id": "YESBANK", "lender_name": "Yes Bank", "lender_type": "private_bank", "min_loan": 50000.0, "max_loan": 500000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 10.85, "rate_max_pct": 21.0, "processing_fee_pct": 2.5}, "BAJAJ": {"lender_id": "BAJAJ", "lender_name": "Bajaj Finance", "lender_type": "nbfc", "min_loan": 40000.0, "max_loan": 5500000.0, "min_tenure_months": 12.0, "max_tenure_months": 108.0, "rate_min_pct": 10.0, "rate_max_pct": 30.5, "processing_fee_pct": 4.13}, "TATACAP": {"lender_id": "TATACAP", "lender_name": "Tata Capital", "lender_type": "nbfc", "min_loan": 40000.0, "max_loan": 3500000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 10.99, "rate_max_pct": 45.0, "processing_fee_pct": 5.0}, "HDBFS": {"lender_id": "HDBFS", "lender_name": "HDB Financial Services", "lender_type": "nbfc", "min_loan": 50000.0, "max_loan": 2000000.0, "min_tenure_months": 12.0, "max_tenure_months": 60.0, "rate_min_pct": 10.0, "rate_max_pct": 36.0, "processing_fee_pct": 5.0}, "POONAWALLA": {"lender_id": "POONAWALLA", "lender_name": "Poonawalla Fincorp", "lender_type": "nbfc", "min_loan": 100000.0, "max_loan": 5000000.0, "min_tenure_months": 12.0, "max_tenure_months": 84.0, "rate_min_pct": 9.99, "rate_max_pct": 18.0, "processing_fee_pct": 4.0}, "LTFIN": {"lender_id": "LTFIN", "lender_name": "L&T Finance", "lender_type": "nbfc", "min_loan": 50000.0, "max_loan": 3000000.0, "min_tenure_months": 12.0, "max_tenure_months": 72.0, "rate_min_pct": 10.5, "rate_max_pct": 24.0, "processing_fee_pct": 3.0}, "Fibe": {"lender_id": "Fibe", "lender_name": "fibe", "lender_type": "fintech", "min_loan": 30000.0, "max_loan": 1000000.0, "min_tenure_months": 6.0, "max_tenure_months": 36.0, "rate_min_pct": 18.0, "rate_max_pct": 18.0, "processing_fee_pct": 2.0}, "KREDITBEE": {"lender_id": "KREDITBEE", "lender_name": "KreditBee", "lender_type": "fintech", "min_loan": 3000.0, "max_loan": 1000000.0, "min_tenure_months": 3.0, "max_tenure_months": 60.0, "rate_min_pct": 12.0, "rate_max_pct": 27.5, "processing_fee_pct": 5.0}}, "rules": {"SBI": [{"rule_id": "SBI_R01", "lender_id": "SBI", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "SBI_R02", "lender_id": "SBI", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "SBI_R03", "lender_id": "SBI", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "76", "unit": "years", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 76.0}, {"rule_id": "SBI_R04", "lender_id": "SBI", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "SBI_R05", "lender_id": "SBI", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "SBI_R06", "lender_id": "SBI", "rule_name": "min_cibil", "operator": ">=", "value": "670", "unit": "score", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 670.0}, {"rule_id": "SBI_R07", "lender_id": "SBI", "rule_name": "requires_salary_account", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "SBI_R08", "lender_id": "SBI", "rule_name": "allows_ntc", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "SBI_R09", "lender_id": "SBI", "rule_name": "foir_cap", "operator": "<=", "value": "0.65", "unit": "ratio", "condition": "", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.65}, {"rule_id": "SBI_R10", "lender_id": "SBI", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "employer_category == 'govt'", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "Condition narrowed to 'govt' only - this lender's raw data distinguishes govt vs private income minimums, not finer employer categories (mnc/psu/sme), even though those exist as possible input_variables values.", "value_num": 20000.0}, {"rule_id": "SBI_R11", "lender_id": "SBI", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "otherwise", "source_url": "https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}], "HDFC": [{"rule_id": "HDFC_R01", "lender_id": "HDFC", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "HDFC_R02", "lender_id": "HDFC", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "HDFC_R03", "lender_id": "HDFC", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "HDFC_R04", "lender_id": "HDFC", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "HDFC_R05", "lender_id": "HDFC", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "HDFC_R06", "lender_id": "HDFC", "rule_name": "min_cibil", "operator": ">=", "value": "720", "unit": "score", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "faq", "is_hard_cutoff": true, "notes": "In FAQ text, not the bullet-point eligibility list (per this sheet's own confidence column).", "value_num": 720.0}, {"rule_id": "HDFC_R07", "lender_id": "HDFC", "rule_name": "allows_ntc", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "HDFC_R08", "lender_id": "HDFC", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "HDFC_R09", "lender_id": "HDFC", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "employer_category == 'govt'", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "Condition narrowed to 'govt' only - this lender's raw data distinguishes govt vs private income minimums, not finer employer categories (mnc/psu/sme), even though those exist as possible input_variables values.", "value_num": 25000.0}, {"rule_id": "HDFC_R10", "lender_id": "HDFC", "rule_name": "min_income", "operator": ">=", "value": "15000", "unit": "INR/month", "condition": "otherwise", "source_url": "https://www.hdfc.bank.in/personal-loan/eligibility-criteria", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 15000.0}, {"rule_id": "HDFC_R11", "lender_id": "HDFC", "rule_name": "allowed_employment_type", "operator": "in", "value": "[salaried]", "unit": "enum", "condition": "", "source_url": "https://www.hdfc.bank.in/personal-loan/loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "Self-employed routed to a different (business) loan product, not this personal loan.", "value_num": "[salaried]"}], "ICICI": [{"rule_id": "ICICI_R01", "lender_id": "ICICI", "rule_name": "min_age", "operator": ">=", "value": "20", "unit": "years", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 20.0}, {"rule_id": "ICICI_R02", "lender_id": "ICICI", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "ICICI_R03", "lender_id": "ICICI", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "ICICI_R04", "lender_id": "ICICI", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "ICICI_R05", "lender_id": "ICICI", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 700.0}, {"rule_id": "ICICI_R06", "lender_id": "ICICI", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "ICICI_R07", "lender_id": "ICICI", "rule_name": "foir_cap", "operator": "<=", "value": "0.45", "unit": "ratio", "condition": "", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "faq", "is_hard_cutoff": false, "notes": "ICICI's FAQ states this as guidance ('prefers 40-45%'), not a hard cutoff.", "value_num": 0.45}, {"rule_id": "ICICI_R08", "lender_id": "ICICI", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "employer_category == 'govt'", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "Condition narrowed to 'govt' only - this lender's raw data distinguishes govt vs private income minimums, not finer employer categories (mnc/psu/sme), even though those exist as possible input_variables values.", "value_num": 20000.0}, {"rule_id": "ICICI_R09", "lender_id": "ICICI", "rule_name": "min_income", "operator": ">=", "value": "30000", "unit": "INR/month", "condition": "otherwise", "source_url": "https://www.icici.bank.in/personal-banking/loans/personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 30000.0}], "AXIS": [{"rule_id": "AXIS_R01", "lender_id": "AXIS", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "AXIS_R02", "lender_id": "AXIS", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "AXIS_R03", "lender_id": "AXIS", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "AXIS_R04", "lender_id": "AXIS", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "AXIS_R05", "lender_id": "AXIS", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "faq", "is_hard_cutoff": false, "notes": "Axis's own text: 'preferred 700+', not stated as a hard cutoff.", "value_num": 700.0}, {"rule_id": "AXIS_R06", "lender_id": "AXIS", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "AXIS_R07", "lender_id": "AXIS", "rule_name": "foir_cap", "operator": "<=", "value": "0.7", "unit": "ratio", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.7}, {"rule_id": "AXIS_R08", "lender_id": "AXIS", "rule_name": "min_income", "operator": ">=", "value": "15000", "unit": "INR/month", "condition": "", "source_url": "https://www.axis.bank.in/retail/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 15000.0}], "KOTAK": [{"rule_id": "KOTAK_R01", "lender_id": "KOTAK", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "KOTAK_R02", "lender_id": "KOTAK", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "KOTAK_R03", "lender_id": "KOTAK", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "KOTAK_R04", "lender_id": "KOTAK", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "KOTAK_R05", "lender_id": "KOTAK", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "KOTAK_R06", "lender_id": "KOTAK", "rule_name": "min_cibil", "operator": ">=", "value": "750", "unit": "score", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "conflict", "is_hard_cutoff": true, "notes": "This sheet's own confidence column flags CIBIL as conflicting across Kotak's own pages (700/730/750); stricter value (750) stored.", "value_num": 750.0}, {"rule_id": "KOTAK_R07", "lender_id": "KOTAK", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "KOTAK_R08", "lender_id": "KOTAK", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}, {"rule_id": "KOTAK_R09", "lender_id": "KOTAK", "rule_name": "min_education", "operator": ">=", "value": "graduate", "unit": "enum", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/personal-loan-for-15-lakhs.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "graduate"}, {"rule_id": "KOTAK_R10", "lender_id": "KOTAK", "rule_name": "salary_multiple_on_disposable_income", "operator": "*", "value": "20", "unit": "x (income-obligations)", "condition": "", "source_url": "https://www.kotak.bank.in/en/personal-banking/loans/personal-loan/eligibility.html", "accessed_date": "2026-10-12", "confidence": "calculator_inferred", "is_hard_cutoff": true, "notes": "Verified formula: eligible_loan = 20 x (net_monthly_income - existing_emi). 3 test points, exact match. Calculator's own tenure default (120mo) exceeds this sheet's stored max_tenure_months=72 - flag for manual review.", "value_num": 20.0}], "IDFC": [{"rule_id": "IDFC_R01", "lender_id": "IDFC", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "IDFC_R02", "lender_id": "IDFC", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "IDFC_R03", "lender_id": "IDFC", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "IDFC_R04", "lender_id": "IDFC", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "IDFC_R05", "lender_id": "IDFC", "rule_name": "min_current_job_months", "operator": ">=", "value": "6", "unit": "months", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 6.0}, {"rule_id": "IDFC_R06", "lender_id": "IDFC", "rule_name": "min_cibil", "operator": ">=", "value": "710", "unit": "score", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "conflict", "is_hard_cutoff": true, "notes": "Flagged as conflict in this sheet (710 vs 730 seen elsewhere); 710 (from IDFC's own eligibility calculator page) stored.", "value_num": 710.0}, {"rule_id": "IDFC_R07", "lender_id": "IDFC", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "IDFC_R08", "lender_id": "IDFC", "rule_name": "min_income", "operator": ">=", "value": "10000", "unit": "INR/month", "condition": "", "source_url": "https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 10000.0}, {"rule_id": "IDFC_R09", "lender_id": "IDFC", "rule_name": "salary_multiple_on_disposable_income", "operator": "*", "value": "10", "unit": "x (income-obligations)", "condition": "", "source_url": "https://www.idfcfirst.bank.in/personal-banking/loans/personal-loan/personal-loan-eligibility-calculator", "accessed_date": "2026-10-12", "confidence": "calculator_inferred", "is_hard_cutoff": true, "notes": "Verified formula: eligible_loan = 10 x (net_monthly_income - existing_emi), capped at product max_loan (Rs 15,00,000). 4 test points, exact match.", "value_num": 10.0}], "INDUSIND": [{"rule_id": "INDUSIND_R01", "lender_id": "INDUSIND", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "INDUSIND_R02", "lender_id": "INDUSIND", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "INDUSIND_R03", "lender_id": "INDUSIND", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "INDUSIND_R04", "lender_id": "INDUSIND", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "INDUSIND_R05", "lender_id": "INDUSIND", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "INDUSIND_R06", "lender_id": "INDUSIND", "rule_name": "min_cibil", "operator": ">=", "value": "730", "unit": "score", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 730.0}, {"rule_id": "INDUSIND_R07", "lender_id": "INDUSIND", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "INDUSIND_R08", "lender_id": "INDUSIND", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "INDUSIND_R09", "lender_id": "INDUSIND", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}], "HSBC": [{"rule_id": "HSBC_R01", "lender_id": "HSBC", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "This sheet's own confidence column marks age as aggregator-estimate, not from an HSBC page directly.", "value_num": 21.0}, {"rule_id": "HSBC_R02", "lender_id": "HSBC", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "HSBC_R03", "lender_id": "HSBC", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "HSBC_R04", "lender_id": "HSBC", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 700.0}, {"rule_id": "HSBC_R05", "lender_id": "HSBC", "rule_name": "requires_salary_account", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "HSBC_R06", "lender_id": "HSBC", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.hsbc.co.in/loans/products/personal", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "HSBC_R07", "lender_id": "HSBC", "rule_name": "requires_existing_customer", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://www.hsbc.co.in/help/faqs/personal-loans/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "Eligible applicants hold a liability account, credit card or home loan with HSBC, or work for a select corporate.", "value_num": "True"}], "FEDERAL": [{"rule_id": "FEDERAL_R01", "lender_id": "FEDERAL", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "FEDERAL_R02", "lender_id": "FEDERAL", "rule_name": "max_age_at_apply", "operator": "<=", "value": "55", "unit": "years", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 55.0}, {"rule_id": "FEDERAL_R03", "lender_id": "FEDERAL", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "FEDERAL_R04", "lender_id": "FEDERAL", "rule_name": "min_total_exp_months", "operator": ">=", "value": "36", "unit": "months", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 36.0}, {"rule_id": "FEDERAL_R05", "lender_id": "FEDERAL", "rule_name": "min_current_job_months", "operator": ">=", "value": "6", "unit": "months", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 6.0}, {"rule_id": "FEDERAL_R06", "lender_id": "FEDERAL", "rule_name": "min_cibil", "operator": ">=", "value": "750", "unit": "score", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "estimate", "is_hard_cutoff": true, "notes": "This sheet's own confidence column: estimate, and specific to Federal's digital epiFI product only, not the main product.", "value_num": 750.0}, {"rule_id": "FEDERAL_R07", "lender_id": "FEDERAL", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "FEDERAL_R08", "lender_id": "FEDERAL", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://www.federalbank.co.in/fedpremia", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}], "BOB": [{"rule_id": "BOB_R01", "lender_id": "BOB", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "BOB_R02", "lender_id": "BOB", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "BOB_R03", "lender_id": "BOB", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "BOB_R04", "lender_id": "BOB", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "BOB_R05", "lender_id": "BOB", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "BOB_R06", "lender_id": "BOB", "rule_name": "min_cibil", "operator": ">=", "value": "726", "unit": "score", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 726.0}, {"rule_id": "BOB_R07", "lender_id": "BOB", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "BOB_R08", "lender_id": "BOB", "rule_name": "foir_cap", "operator": "<=", "value": "0.4", "unit": "ratio", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.4}, {"rule_id": "BOB_R09", "lender_id": "BOB", "rule_name": "min_income", "operator": ">=", "value": "15000", "unit": "INR/month", "condition": "", "source_url": "https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 15000.0}], "PNB": [{"rule_id": "PNB_R01", "lender_id": "PNB", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "PNB_R02", "lender_id": "PNB", "rule_name": "max_age_at_apply", "operator": "<=", "value": "59", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 59.0}, {"rule_id": "PNB_R03", "lender_id": "PNB", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "PNB_R04", "lender_id": "PNB", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "PNB_R05", "lender_id": "PNB", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "PNB_R06", "lender_id": "PNB", "rule_name": "min_cibil", "operator": ">=", "value": "650", "unit": "score", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 650.0}, {"rule_id": "PNB_R07", "lender_id": "PNB", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "PNB_R08", "lender_id": "PNB", "rule_name": "foir_cap", "operator": "<=", "value": "0.6", "unit": "ratio", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 0.6}, {"rule_id": "PNB_R09", "lender_id": "PNB", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://paisabazaar.com/punjab-national-bank/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}], "UNION": [{"rule_id": "UNION_R01", "lender_id": "UNION", "rule_name": "min_age", "operator": ">=", "value": "18", "unit": "years", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 18.0}, {"rule_id": "UNION_R02", "lender_id": "UNION", "rule_name": "max_age_at_apply", "operator": "<=", "value": "59", "unit": "years", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 59.0}, {"rule_id": "UNION_R03", "lender_id": "UNION", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "UNION_R04", "lender_id": "UNION", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "UNION_R05", "lender_id": "UNION", "rule_name": "min_current_job_months", "operator": ">=", "value": "6", "unit": "months", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "This sheet's own confidence column marks experience as aggregator-estimate.", "value_num": 6.0}, {"rule_id": "UNION_R06", "lender_id": "UNION", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 700.0}, {"rule_id": "UNION_R07", "lender_id": "UNION", "rule_name": "requires_salary_account", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "UNION_R08", "lender_id": "UNION", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "UNION_R09", "lender_id": "UNION", "rule_name": "foir_cap", "operator": "<=", "value": "0.6", "unit": "ratio", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.6}, {"rule_id": "UNION_R10", "lender_id": "UNION", "rule_name": "min_income", "operator": ">=", "value": "15000", "unit": "INR/month", "condition": "", "source_url": "https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 15000.0}], "YESBANK": [{"rule_id": "YESBANK_R01", "lender_id": "YESBANK", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "YESBANK_R02", "lender_id": "YESBANK", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "YESBANK_R03", "lender_id": "YESBANK", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "YESBANK_R04", "lender_id": "YESBANK", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "YESBANK_R05", "lender_id": "YESBANK", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "YESBANK_R06", "lender_id": "YESBANK", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 700.0}, {"rule_id": "YESBANK_R07", "lender_id": "YESBANK", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "YESBANK_R08", "lender_id": "YESBANK", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "YESBANK_R09", "lender_id": "YESBANK", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}], "BAJAJ": [{"rule_id": "BAJAJ_R01", "lender_id": "BAJAJ", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "BAJAJ_R02", "lender_id": "BAJAJ", "rule_name": "max_age_at_apply", "operator": "<=", "value": "80", "unit": "years", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 80.0}, {"rule_id": "BAJAJ_R03", "lender_id": "BAJAJ", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "80", "unit": "years", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 80.0}, {"rule_id": "BAJAJ_R04", "lender_id": "BAJAJ", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "BAJAJ_R05", "lender_id": "BAJAJ", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "BAJAJ_R06", "lender_id": "BAJAJ", "rule_name": "min_cibil", "operator": ">=", "value": "650", "unit": "score", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "conflict", "is_hard_cutoff": true, "notes": "This sheet's confidence text cites 685 as official, but 650 is the value stored - a real conflict, flagging rather than silently picking one.", "value_num": 650.0}, {"rule_id": "BAJAJ_R07", "lender_id": "BAJAJ", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "BAJAJ_R08", "lender_id": "BAJAJ", "rule_name": "foir_cap", "operator": "<=", "value": "0.75", "unit": "ratio", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.75}, {"rule_id": "BAJAJ_R09", "lender_id": "BAJAJ", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "", "source_url": "https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 20000.0}], "TATACAP": [{"rule_id": "TATACAP_R01", "lender_id": "TATACAP", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "TATACAP_R02", "lender_id": "TATACAP", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "TATACAP_R03", "lender_id": "TATACAP", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "TATACAP_R04", "lender_id": "TATACAP", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "TATACAP_R05", "lender_id": "TATACAP", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "TATACAP_R06", "lender_id": "TATACAP", "rule_name": "min_cibil", "operator": ">=", "value": "725", "unit": "score", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "estimate", "is_hard_cutoff": false, "notes": "Tata Capital's own text calls this 'preferred', not a stated cutoff.", "value_num": 725.0}, {"rule_id": "TATACAP_R07", "lender_id": "TATACAP", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "TATACAP_R08", "lender_id": "TATACAP", "rule_name": "foir_cap", "operator": "<=", "value": "0.55", "unit": "ratio", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.55}, {"rule_id": "TATACAP_R09", "lender_id": "TATACAP", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "", "source_url": "https://www.tatacapital.com/personal-loan/2-lakhs-personal-loan.html", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 20000.0}], "HDBFS": [{"rule_id": "HDBFS_R01", "lender_id": "HDBFS", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "HDBFS_R02", "lender_id": "HDBFS", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "HDBFS_R03", "lender_id": "HDBFS", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "HDBFS_R04", "lender_id": "HDBFS", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "HDBFS_R05", "lender_id": "HDBFS", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "HDBFS_R06", "lender_id": "HDBFS", "rule_name": "min_cibil", "operator": ">=", "value": "750", "unit": "score", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 750.0}, {"rule_id": "HDBFS_R07", "lender_id": "HDBFS", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "HDBFS_R08", "lender_id": "HDBFS", "rule_name": "foir_cap", "operator": "<=", "value": "0.65", "unit": "ratio", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 0.65}, {"rule_id": "HDBFS_R09", "lender_id": "HDBFS", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "", "source_url": "https://paisabazaar.com/hdb/personal-loan", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 20000.0}], "POONAWALLA": [{"rule_id": "POONAWALLA_R01", "lender_id": "POONAWALLA", "rule_name": "min_age", "operator": ">=", "value": "22", "unit": "years", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 22.0}, {"rule_id": "POONAWALLA_R02", "lender_id": "POONAWALLA", "rule_name": "max_age_at_apply", "operator": "<=", "value": "57", "unit": "years", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 57.0}, {"rule_id": "POONAWALLA_R03", "lender_id": "POONAWALLA", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "POONAWALLA_R04", "lender_id": "POONAWALLA", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "POONAWALLA_R05", "lender_id": "POONAWALLA", "rule_name": "min_current_job_months", "operator": ">=", "value": "1", "unit": "months", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 1.0}, {"rule_id": "POONAWALLA_R06", "lender_id": "POONAWALLA", "rule_name": "min_cibil", "operator": ">=", "value": "750", "unit": "score", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "not_published", "is_hard_cutoff": false, "notes": "This sheet's own notes: 'Min CIBIL not published (needs high bureau score)' - the stored 750 is not a confirmed lender figure.", "value_num": 750.0}, {"rule_id": "POONAWALLA_R07", "lender_id": "POONAWALLA", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "POONAWALLA_R08", "lender_id": "POONAWALLA", "rule_name": "foir_cap", "operator": "<=", "value": "0.65", "unit": "ratio", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.65}, {"rule_id": "POONAWALLA_R09", "lender_id": "POONAWALLA", "rule_name": "min_income", "operator": ">=", "value": "30000", "unit": "INR/month", "condition": "", "source_url": "https://poonawallafincorp.com/20-lakh-personal-loan.php", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 30000.0}], "LTFIN": [{"rule_id": "LTFIN_R01", "lender_id": "LTFIN", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "LTFIN_R02", "lender_id": "LTFIN", "rule_name": "max_age_at_apply", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "LTFIN_R03", "lender_id": "LTFIN", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "58", "unit": "years", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 58.0}, {"rule_id": "LTFIN_R04", "lender_id": "LTFIN", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "estimate", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "LTFIN_R05", "lender_id": "LTFIN", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "LTFIN_R06", "lender_id": "LTFIN", "rule_name": "min_cibil", "operator": ">=", "value": "700", "unit": "score", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 700.0}, {"rule_id": "LTFIN_R07", "lender_id": "LTFIN", "rule_name": "allows_ntc", "operator": "==", "value": "False", "unit": "bool", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "False"}, {"rule_id": "LTFIN_R08", "lender_id": "LTFIN", "rule_name": "foir_cap", "operator": "<=", "value": "0.65", "unit": "ratio", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.65}, {"rule_id": "LTFIN_R09", "lender_id": "LTFIN", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "", "source_url": "https://www.ltfinance.com/personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}, {"rule_id": "LTFIN_R10", "lender_id": "LTFIN", "rule_name": "min_income", "operator": ">=", "value": "25000", "unit": "INR/month", "condition": "city_tier == 'tier1'", "source_url": "https://www.ltfinance.com/blog/personal-loan/minimum-salary-for-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 25000.0}, {"rule_id": "LTFIN_R11", "lender_id": "LTFIN", "rule_name": "min_income", "operator": ">=", "value": "15000", "unit": "INR/month", "condition": "city_tier in [tier2,tier3]", "source_url": "https://www.ltfinance.com/blog/personal-loan/minimum-salary-for-personal-loan", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 15000.0}], "Fibe": [{"rule_id": "Fibe_R01", "lender_id": "Fibe", "rule_name": "min_age", "operator": ">=", "value": "19", "unit": "years", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 19.0}, {"rule_id": "Fibe_R02", "lender_id": "Fibe", "rule_name": "max_age_at_apply", "operator": "<=", "value": "55", "unit": "years", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 55.0}, {"rule_id": "Fibe_R03", "lender_id": "Fibe", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "55", "unit": "years", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 55.0}, {"rule_id": "Fibe_R04", "lender_id": "Fibe", "rule_name": "min_total_exp_months", "operator": ">=", "value": "24", "unit": "months", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 24.0}, {"rule_id": "Fibe_R05", "lender_id": "Fibe", "rule_name": "min_current_job_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "estimate", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "Fibe_R06", "lender_id": "Fibe", "rule_name": "min_cibil", "operator": ">=", "value": "650", "unit": "score", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 650.0}, {"rule_id": "Fibe_R07", "lender_id": "Fibe", "rule_name": "allows_ntc", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "Fibe_R08", "lender_id": "Fibe", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "Fibe_R09", "lender_id": "Fibe", "rule_name": "min_income", "operator": ">=", "value": "20000", "unit": "INR/month", "condition": "", "source_url": "https://www.fibe.in/personal-loan/", "accessed_date": "2026-10-11", "confidence": "official", "is_hard_cutoff": true, "notes": "", "value_num": 20000.0}], "KREDITBEE": [{"rule_id": "KREDITBEE_R01", "lender_id": "KREDITBEE", "rule_name": "min_age", "operator": ">=", "value": "21", "unit": "years", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 21.0}, {"rule_id": "KREDITBEE_R02", "lender_id": "KREDITBEE", "rule_name": "max_age_at_apply", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "KREDITBEE_R03", "lender_id": "KREDITBEE", "rule_name": "max_age_at_maturity", "operator": "<=", "value": "60", "unit": "years", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 60.0}, {"rule_id": "KREDITBEE_R04", "lender_id": "KREDITBEE", "rule_name": "min_total_exp_months", "operator": ">=", "value": "12", "unit": "months", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 12.0}, {"rule_id": "KREDITBEE_R05", "lender_id": "KREDITBEE", "rule_name": "min_current_job_months", "operator": ">=", "value": "2", "unit": "months", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 2.0}, {"rule_id": "KREDITBEE_R06", "lender_id": "KREDITBEE", "rule_name": "min_cibil", "operator": ">=", "value": "670", "unit": "score", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 670.0}, {"rule_id": "KREDITBEE_R07", "lender_id": "KREDITBEE", "rule_name": "allows_ntc", "operator": "==", "value": "True", "unit": "bool", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": "True"}, {"rule_id": "KREDITBEE_R08", "lender_id": "KREDITBEE", "rule_name": "foir_cap", "operator": "<=", "value": "0.5", "unit": "ratio", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 0.5}, {"rule_id": "KREDITBEE_R09", "lender_id": "KREDITBEE", "rule_name": "min_income", "operator": ">=", "value": "10000", "unit": "INR/month", "condition": "", "source_url": "https://www.paisabazaar.com/personal-loan/kreditbee", "accessed_date": "2026-10-11", "confidence": "aggregator", "is_hard_cutoff": true, "notes": "", "value_num": 10000.0}]}};
+const LENDERS = DATA.lenders, RULES = DATA.rules;
+const PRESETS = [{"id": "P01_high_income_good_cibil", "description": "High-income private employee, excellent CIBIL, no existing EMI - should be eligible almost everywhere, good test of ranking.", "profile": {"age": 30, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 150000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 60, "current_job_months": 24, "city_tier": "metro", "cibil_score": 820, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 1000000, "requested_tenure_months": 36}}, {"id": "P02_high_existing_emi_rejected_on_foir", "description": "Decent income but existing EMI already eats most of it - should be rejected on FOIR at most FOIR-cap lenders.", "profile": {"age": 35, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 40000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 48, "current_job_months": 18, "city_tier": "tier2", "cibil_score": 740, "existing_emi": 28000, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 300000, "requested_tenure_months": 48}}, {"id": "P03_ntc_new_to_credit", "description": "New-to-credit (cibil_score=0) applicant - should fail min_cibil gates everywhere that have one, even where allows_ntc isn't explicitly set.", "profile": {"age": 24, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 35000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 10, "current_job_months": 10, "city_tier": "tier1", "cibil_score": 0, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 150000, "requested_tenure_months": 24}}, {"id": "P04_govt_employee_sbi", "description": "Govt employee - tests the employer_category=='govt' conditional income rule (SBI).", "profile": {"age": 40, "employment_type": "salaried", "employer_category": "govt", "net_monthly_income": 60000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 120, "current_job_months": 60, "city_tier": "tier2", "cibil_score": 780, "existing_emi": 5000, "salary_account_bank": "SBI", "existing_customer_of": ["SBI"], "requested_amount": 800000, "requested_tenure_months": 60}}, {"id": "P05_self_employed_out_of_scope", "description": "Self-employed - should be rejected EVERYWHERE with the explicit scope-limit reason, not silently evaluated against salaried rules.", "profile": {"age": 38, "employment_type": "self_employed", "employer_category": "na", "net_monthly_income": 90000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 96, "current_job_months": 96, "city_tier": "metro", "cibil_score": 760, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 500000, "requested_tenure_months": 36}}, {"id": "P06_near_age_cutoff", "description": "Older applicant close to several lenders' max_age_at_maturity - tests the age-at-maturity gate using requested tenure.", "profile": {"age": 56, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 70000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 300, "current_job_months": 36, "city_tier": "tier1", "cibil_score": 790, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 400000, "requested_tenure_months": 60}}, {"id": "P07_idfc_kotak_multiplier_formula", "description": "Mid income, moderate existing EMI - exercises the calculator-verified disposable-income-multiple formula lenders (IDFC, Kotak) against FOIR-cap lenders side by side.", "profile": {"age": 29, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 100000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 48, "current_job_months": 20, "city_tier": "metro", "cibil_score": 760, "existing_emi": 5000, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 1500000, "requested_tenure_months": 48}}, {"id": "P08_low_income_rejected_everywhere", "description": "Below most lenders' minimum income floor - should produce mostly 'min_income failed' rejections.", "profile": {"age": 26, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 12000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 12, "current_job_months": 12, "city_tier": "tier3", "cibil_score": 700, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 100000, "requested_tenure_months": 24}}, {"id": "P09_rate_vs_fee_tradeoff", "description": "Clean profile used specifically to check that ranking is by total_cost, not by advertised rate_min_pct (a lower-rate lender with a high fee should NOT automatically win).", "profile": {"age": 32, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 80000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 72, "current_job_months": 30, "city_tier": "metro", "cibil_score": 800, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 500000, "requested_tenure_months": 36}}, {"id": "P10_small_requested_amount_below_min_loan", "description": "Requests a very small amount - tests the 'eligible amount below product min_loan' rejection path at the end of Stage 2.", "profile": {"age": 33, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 60000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 48, "current_job_months": 24, "city_tier": "tier2", "cibil_score": 750, "existing_emi": 0, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 20000, "requested_tenure_months": 12}}, {"id": "P11_fintech_quick_small_loan", "description": "Profile shaped for fintech/NBFC digital lenders (Fibe, KreditBee) - modest income, short tenure request.", "profile": {"age": 25, "employment_type": "salaried", "employer_category": "pvt_ltd", "net_monthly_income": 28000, "salary_credit_mode": "bank_transfer", "total_work_exp_months": 14, "current_job_months": 8, "city_tier": "tier1", "cibil_score": 710, "existing_emi": 2000, "salary_account_bank": null, "existing_customer_of": [], "requested_amount": 80000, "requested_tenure_months": 12}}];
+
+/* ---------------- form ---------------- */
+const FIELDS = [
+  {k:'age', label:'Age', type:'number', val:30},
+  {k:'employment_type', label:'Employment type', type:'select', opts:[['salaried','Salaried'],['self_employed','Self-employed'],['pensioner','Pensioner']], val:'salaried'},
+  {k:'employer_category', label:'Employer category', type:'select', opts:[['govt','Government'],['psu','PSU'],['mnc','MNC'],['pvt_ltd','Private company'],['sme','Small / unlisted firm'],['na','Not applicable']], val:'pvt_ltd'},
+  {k:'net_monthly_income', label:'Net monthly income', type:'number', val:60000, placeholder:'₹ per month'},
+  {k:'existing_emi', label:'Existing EMI', type:'number', val:0, placeholder:'₹ per month'},
+  {k:'cibil_score', label:'CIBIL score', type:'number', val:750, placeholder:'0 = no credit history'},
+  {k:'total_work_exp_months', label:'Total work experience', type:'number', val:48, placeholder:'months'},
+  {k:'current_job_months', label:'Current job tenure', type:'number', val:24, placeholder:'months'},
+  {k:'city_tier', label:'City tier', type:'select', opts:[['metro','Metro'],['tier1','Tier 1 city'],['tier2','Tier 2 city'],['tier3','Tier 3 city']], val:'metro'},
+  {k:'salary_account_bank', label:'Salary account bank', type:'text', val:'', placeholder:'e.g. SBI, or leave blank'},
+  {k:'requested_amount', label:'Requested amount', type:'number', val:500000, placeholder:'₹'},
+  {k:'requested_tenure_months', label:'Requested tenure', type:'number', val:36, placeholder:'months'},
+];
+const formEl = document.getElementById('form_fields');
+FIELDS.forEach(f=>{
+  const fieldWrap = document.createElement('div');
+  const label = document.createElement('label'); label.textContent = f.label;
+  let input;
+  if(f.type==='select'){
+    input = document.createElement('select');
+    f.opts.forEach(o=>{const opt=document.createElement('option');
+      const [val,txt] = Array.isArray(o) ? o : [o,o];
+      opt.value=val;opt.textContent=txt;input.appendChild(opt);});
+    input.value = f.val;
+  } else {
+    input = document.createElement('input'); input.type = f.type; input.value = f.val;
+    if(f.placeholder) input.placeholder = f.placeholder;
+  }
+  input.id = 'f_'+f.k;
+  fieldWrap.appendChild(label); fieldWrap.appendChild(input); formEl.appendChild(fieldWrap);
+});
+document.getElementById('f_employment_type').addEventListener('change', e=>{
+  document.getElementById('scopeNote').style.display = e.target.value==='salaried' ? 'none':'block';
+});
+
+/* ---------------- test-case presets ---------------- */
+const presetsEl = document.getElementById('presets');
+PRESETS.forEach((preset,i)=>{
+  const btn = document.createElement('div');
+  btn.className = 'preset-btn';
+  btn.innerHTML = `<span>${preset.id.replace(/^P\d+_/,'').replace(/_/g,' ')}</span><span class="pid">${preset.id.slice(0,3)}</span>`;
+  btn.title = preset.description;
+  btn.onclick = ()=>loadPreset(i);
+  presetsEl.appendChild(btn);
+});
+function loadPreset(i){
+  const preset = PRESETS[i];
+  const p = preset.profile;
+  FIELDS.forEach(f=>{
+    const el = document.getElementById('f_'+f.k);
+    let v = p[f.k];
+    if(v===null || v===undefined) v = (f.type==='number') ? 0 : '';
+    el.value = v;
+  });
+  document.getElementById('scopeNote').style.display = p.employment_type==='salaried' ? 'none':'block';
+  document.getElementById('form').scrollIntoView({behavior:'smooth', block:'start'});
+  runEngine(true);
+}
+
+function readProfile(){
+  const p = {};
+  FIELDS.forEach(f=>{
+    const el = document.getElementById('f_'+f.k);
+    p[f.k] = f.type==='number' ? Number(el.value||0) : el.value;
+  });
+  p.is_ntc = p.cibil_score === 0;
+  p.existing_customer_of = [];
+  return p;
+}
+
+/* ---------------- engine (port of src/eligibility.py) ---------------- */
+function emi(principal, annualRatePct, months){
+  const r = annualRatePct/100/12;
+  if(r===0) return principal/months;
+  return principal*r*Math.pow(1+r,months) / (Math.pow(1+r,months)-1);
+}
+function maxPrincipalFromEmi(maxEmi, annualRatePct, months){
+  if(maxEmi<=0) return 0;
+  const r = annualRatePct/100/12;
+  if(r===0) return maxEmi*months;
+  return maxEmi*(Math.pow(1+r,months)-1) / (r*Math.pow(1+r,months));
+}
+function assignRate(cibil, lenderMinCibil, rateMin, rateMax){
+  if(rateMin==null || rateMax==null) return rateMax||rateMin||0;
+  const lo = lenderMinCibil!=null ? lenderMinCibil : 650;
+  if(cibil<=lo) return rateMax;
+  if(cibil>=900) return rateMin;
+  const frac = (cibil-lo)/(900-lo);
+  return rateMax - (rateMax-rateMin)*frac;
+}
+function evalCondition(cond, p){
+  cond = (cond||'').trim();
+  if(!cond || cond==='otherwise') return true;
+  try{
+    if(cond.includes('==')){
+      let [field,val] = cond.split('==').map(s=>s.trim().replace(/^['"]|['"]$/g,''));
+      return String(p[field]) === val;
+    }
+    if(cond.includes(' in [')){
+      let [field,rest] = cond.split(' in [');
+      field = field.trim();
+      const opts = rest.replace(/\]$/,'').split(',').map(s=>s.trim());
+      return opts.includes(String(p[field]));
+    }
+    if(cond.includes('contains')){
+      let [field,val] = cond.split('contains').map(s=>s.trim().replace(/^['"]|['"]$/g,''));
+      return (p[field]||[]).includes(val);
+    }
+  }catch(e){}
+  return true;
+}
+function applicantFieldForRule(rname, p){
+  const map = {
+    min_age:p.age, max_age_at_apply:p.age,
+    min_total_exp_months:p.total_work_exp_months, min_current_job_months:p.current_job_months,
+    min_cibil:p.cibil_score, min_income:p.net_monthly_income,
+  };
+  return map.hasOwnProperty(rname) ? map[rname] : null;
+}
+function checkGates(p, lenderRules, lenderId, trace){
+  const flags = [];
+  if(p.employment_type !== 'salaried'){
+    return {ok:false, reason:"Self-employed/pensioner applicants are out of scope for this model (ITR-based income rules were not collected).", flags};
+  }
+  const tenureYears = (p.requested_tenure_months||0)/12;
+  for(const r of lenderRules){
+    const rname = r.rule_name;
+    if(rname==='foir_cap' || rname==='salary_multiple_on_disposable_income') continue;
+    if(!evalCondition(r.condition, p)) continue;
+
+    if(rname==='max_age_at_maturity'){
+      const maturityAge = p.age + tenureYears;
+      if(maturityAge > r.value_num){
+        const reason = `Age at maturity (${maturityAge.toFixed(1)}) exceeds lender's max_age_at_maturity (${r.value_num}).`;
+        if(!r.is_hard_cutoff){ flags.push('soft-cutoff failed: '+reason); continue; }
+        if(trace) trace.push([lenderId,'max_age_at_maturity',false]);
+        return {ok:false, reason, flags};
+      }
+      if(trace) trace.push([lenderId,'max_age_at_maturity',true]);
+      continue;
+    }
+    if(rname==='requires_salary_account'){
+      const hasItHere = (p.salary_account_bank||'').trim().toUpperCase() === lenderId.toUpperCase();
+      const targetBool = String(r.value_num).toLowerCase()==='true';
+      if(targetBool && !hasItHere){
+        const reason = `requires_salary_account failed: applicant's salary account is with ${p.salary_account_bank||'no bank'}, not ${lenderId}.`;
+        if(!r.is_hard_cutoff){ flags.push('soft-cutoff failed: '+reason); continue; }
+        if(trace) trace.push([lenderId,'requires_salary_account',false]);
+        return {ok:false, reason, flags};
+      }
+      if(trace) trace.push([lenderId,'requires_salary_account',true]);
+      continue;
+    }
+    if(rname==='allows_ntc'){
+      if(!p.is_ntc) continue;
+      const lenderAllows = String(r.value_num).toLowerCase()==='true';
+      if(!lenderAllows){
+        if(trace) trace.push([lenderId,'allows_ntc',false]);
+        return {ok:false, reason:"New-to-credit (no CIBIL history) applicant; this lender does not accept NTC applicants.", flags};
+      }
+      if(trace) trace.push([lenderId,'allows_ntc',true]);
+      continue;
+    }
+
+    const aVal = applicantFieldForRule(rname, p);
+    if(aVal===null || aVal===undefined) continue;
+    const target = r.value_num;
+    let ok;
+    if(r.operator==='>=') ok = aVal >= target;
+    else if(r.operator==='<=') ok = aVal <= target;
+    else if(r.operator==='=='){ ok = Boolean(aVal) === (String(target).toLowerCase()==='true'); }
+    else ok = true;
+
+    if(trace) trace.push([lenderId,rname,ok]);
+    if(!ok){
+      const reason = `${rname} failed: applicant=${aVal}, lender requires ${r.operator} ${target}`;
+      if(!r.is_hard_cutoff){ flags.push('soft-cutoff failed: '+reason); continue; }
+      return {ok:false, reason, flags};
+    }
+  }
+  return {ok:true, reason:null, flags};
+}
+function computeAmount(p, lender, lenderRules){
+  const flags = [];
+  const foirRule = lenderRules.find(r=>r.rule_name==='foir_cap');
+  const multRule = lenderRules.find(r=>r.rule_name==='salary_multiple_on_disposable_income');
+  let tenure = Math.min(p.requested_tenure_months || lender.max_tenure_months || 0, lender.max_tenure_months || 1e9);
+  tenure = Math.max(tenure, lender.min_tenure_months || 1);
+
+  let candidate;
+  if(multRule){
+    const disposable = Math.max(p.net_monthly_income - p.existing_emi, 0);
+    candidate = multRule.value_num * disposable;
+    if(multRule.confidence==='calculator_inferred') flags.push(`amount formula is calculator-inferred: ${multRule.value_num}x disposable income`);
+  } else if(foirRule){
+    const foirCap = foirRule.value_num;
+    if(foirRule.confidence==='assumed') flags.push(`foir_cap=${foirCap} is an ESTIMATE for this lender`);
+    const midpointRate = ((lender.rate_min_pct||0)+(lender.rate_max_pct||0))/2;
+    const maxEmi = Math.max(foirCap*p.net_monthly_income - p.existing_emi, 0);
+    if(maxEmi===0) flags.push(`FOIR exceeded: existing EMI ₹${p.existing_emi.toLocaleString()} already meets/exceeds cap`);
+    candidate = maxPrincipalFromEmi(maxEmi, midpointRate, tenure);
+  } else {
+    candidate = lender.max_loan || 0;
+    flags.push('no foir_cap or salary-multiple rule found - sized at product max_loan only');
+  }
+  const amount = Math.min(candidate, lender.max_loan || candidate);
+  return {amount, flags};
+}
+function evaluateLender(p, lenderId, trace){
+  const lender = LENDERS[lenderId];
+  const lenderRules = RULES[lenderId] || [];
+  const gates = checkGates(p, lenderRules, lenderId, trace);
+  if(!gates.ok) return {lenderId, lenderName:lender.lender_name, eligible:false, reason:gates.reason, flags:gates.flags};
+
+  const amt = computeAmount(p, lender, lenderRules);
+  const flags = gates.flags.concat(amt.flags);
+  if(lender.min_loan && amt.amount < lender.min_loan){
+    return {lenderId, lenderName:lender.lender_name, eligible:false,
+      reason:`Eligible amount ₹${amt.amount.toLocaleString()} is below this lender's product minimum ₹${lender.min_loan.toLocaleString()}.`, flags};
+  }
+  const minCibilRule = lenderRules.find(r=>r.rule_name==='min_cibil');
+  const lenderMinCibil = minCibilRule ? minCibilRule.value_num : null;
+  const finalRate = assignRate(p.cibil_score, lenderMinCibil, lender.rate_min_pct, lender.rate_max_pct);
+
+  const offeredAmount = p.requested_amount ? Math.min(amt.amount, p.requested_amount) : amt.amount;
+  let tenure = Math.min(p.requested_tenure_months || lender.max_tenure_months, lender.max_tenure_months || 1e9);
+  tenure = Math.max(tenure, lender.min_tenure_months || 1);
+
+  const monthlyEmi = emi(offeredAmount, finalRate, tenure);
+  const totalInterest = monthlyEmi*tenure - offeredAmount;
+  const processingFee = (lender.processing_fee_pct||0)/100*offeredAmount;
+  const totalCost = totalInterest + processingFee;
+
+  return {lenderId, lenderName:lender.lender_name, eligible:true,
+    eligibleAmount:amt.amount, offeredAmount, assignedRate:finalRate, tenure,
+    emi:monthlyEmi, totalInterest, processingFee, totalCost, flags};
+}
+function rankLenders(p, trace){
+  const decisions = Object.keys(LENDERS).map(lid=>evaluateLender(p, lid, trace));
+  const eligible = decisions.filter(d=>d.eligible);
+  const ineligible = decisions.filter(d=>!d.eligible);
+  eligible.sort((a,b)=> a.totalCost-b.totalCost || b.offeredAmount-a.offeredAmount);
+  for(let i=0;i<eligible.length-1;i++){
+    const a=eligible[i], b=eligible[i+1];
+    if(a.totalCost && b.totalCost && Math.abs(a.totalCost-b.totalCost) <= 0.02*a.totalCost){
+      const ta=LENDERS[a.lenderId].lender_type, tb=LENDERS[b.lenderId].lender_type;
+      if(ta!==tb) b.flags.push(`near-tie with ${a.lenderId} (within 2% cost) — ${a.lenderId} is ${ta}, this is ${tb}; cost-only ranking, not a bias.`);
+    }
+  }
+  return eligible.concat(ineligible);
+}
+
+/* ---------------- render ---------------- */
+function money(n){ return '₹'+Math.round(n).toLocaleString(); }
+
+function runEngine(scroll){
+  const p = readProfile();
+  const trace = [];
+  const decisions = rankLenders(p, trace);
+  const eligible = decisions.filter(d=>d.eligible);
+  const rejected = decisions.filter(d=>!d.eligible);
+
+  document.getElementById('resultsBlock').style.display = 'block';
+
+  const traceBox = document.getElementById('traceBox');
+  traceBox.innerHTML = trace.slice(0,18).map(([lid,rule,ok])=>
+    `<div><span class="prompt">$</span> <span class="t">${lid}</span><span class="k">.${rule}</span> → <span class="${ok?'ok':'no'}">${ok?'PASS':'FAIL'}</span></div>`
+  ).join('') || '<div class="k">// no gate rows matched for this profile</div>';
+
+  document.getElementById('statEligible').textContent = eligible.length;
+  document.getElementById('statRejected').textContent = rejected.length;
+
+  if(eligible.length){
+    const b = eligible[0];
+    document.getElementById('cPrincipal').textContent = money(b.offeredAmount);
+    document.getElementById('cInterest').textContent = money(b.totalInterest);
+    document.getElementById('cFee').textContent = money(b.processingFee);
+    document.getElementById('cTotal').textContent = money(b.totalCost);
+    document.getElementById('bestPick').style.display = 'flex';
+    document.getElementById('bpName').textContent = b.lenderId+' — '+b.lenderName;
+    document.getElementById('bpMeta').textContent = `${b.assignedRate.toFixed(2)}% · ${b.tenure}mo · EMI ${money(b.emi)}`;
+  } else {
+    ['cPrincipal','cInterest','cFee','cTotal'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('bestPick').style.display = 'none';
+  }
+
+  const maxCost = eligible.length ? Math.max(...eligible.slice(0,6).map(d=>d.totalCost)) : 1;
+  document.getElementById('barsBox').innerHTML = eligible.slice(0,6).map(d=>`
+    <div class="barrow">
+      <div class="id">${d.lenderId}</div>
+      <div class="track"><div class="fill" style="width:${(d.totalCost/maxCost*100).toFixed(0)}%"></div></div>
+      <div class="cost">${money(d.totalCost)}</div>
+    </div>`).join('') || '<span style="color:var(--muted);font-size:13px;">No eligible lenders.</span>';
+
+  const tbody = document.getElementById('eligibleTable');
+  tbody.innerHTML = eligible.map((d,i)=>`
+    <tr>
+      <td><span class="rank">${i+1}</span></td>
+      <td class="lender">${d.lenderId}<div style="color:var(--muted);font-weight:400;font-size:12px;">${d.lenderName}</div>
+        ${d.flags.map(f=>`<span class="flag">${f}</span>`).join('')}</td>
+      <td>${money(d.offeredAmount)}</td>
+      <td>${d.assignedRate.toFixed(2)}%</td>
+      <td>${d.tenure}mo</td>
+      <td>${money(d.emi)}</td>
+      <td><strong>${money(d.totalCost)}</strong></td>
+    </tr>`).join('') || '<tr><td colspan="7" style="color:var(--muted);">No eligible lenders for this profile.</td></tr>';
+
+  document.getElementById('rejectSummary').textContent = `Show rejected lenders & reasons (${rejected.length})`;
+  document.getElementById('rejectList').innerHTML = rejected.map(d=>`
+    <div class="reject-row"><span class="id">${d.lenderId}</span><span class="why">${d.reason}</span></div>
+  `).join('');
+
+  if(scroll) document.getElementById('resultsBlock').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ---------------- browse lenders (click a chip, see its data) ---------------- */
+const bankChipsEl = document.getElementById('bankChips');
+const bankDetailEl = document.getElementById('bankDetail');
+const lenderIds = Object.keys(LENDERS).sort();
+lenderIds.forEach(lid=>{
+  const chip = document.createElement('div');
+  chip.className = 'bankchip';
+  chip.textContent = lid;
+  chip.onclick = ()=>showBank(lid, chip);
+  bankChipsEl.appendChild(chip);
+});
+function showBank(lid, chipEl){
+  document.querySelectorAll('.bankchip').forEach(c=>c.classList.remove('active'));
+  if(bankDetailEl.dataset.open === lid){ // clicking the open one again closes it
+    bankDetailEl.dataset.open = '';
+    bankDetailEl.innerHTML = '';
+    return;
+  }
+  chipEl.classList.add('active');
+  bankDetailEl.dataset.open = lid;
+  const l = LENDERS[lid];
+  const fmtMoney = v => v!=null ? '₹'+v.toLocaleString() : '—';
+  const fields = [
+    ['Min loan', fmtMoney(l.min_loan)], ['Max loan', fmtMoney(l.max_loan)],
+    ['Min tenure', l.min_tenure_months!=null ? l.min_tenure_months+'mo':'—'],
+    ['Max tenure', l.max_tenure_months!=null ? l.max_tenure_months+'mo':'—'],
+    ['Rate from', l.rate_min_pct!=null ? l.rate_min_pct+'%':'—'],
+    ['Rate up to', l.rate_max_pct!=null ? l.rate_max_pct+'%':'—'],
+    ['Processing fee', l.processing_fee_pct!=null ? l.processing_fee_pct+'%':'—'],
+  ];
+  const ruleCount = (RULES[lid]||[]).length;
+  bankDetailEl.innerHTML = `
+    <div class="bank-detail-box" style="display:block;">
+      <div class="bd-head"><span class="nm">${l.lender_name}</span><span class="ty">${l.lender_type.replace('_',' ')} · ${ruleCount} rules</span></div>
+      <div class="bd-grid">${fields.map(([k,v])=>`<div class="f"><div class="l">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
+    </div>`;
+}
+
+runEngine(false); // fill the trace + results with the default profile on load, so nothing sits empty
+</script>
+</body>
+</html>
