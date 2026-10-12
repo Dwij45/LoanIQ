@@ -1,0 +1,123 @@
+[
+  {
+    "id": "P01_high_income_good_cibil",
+    "description": "High-income private employee, excellent CIBIL, no existing EMI - should be eligible almost everywhere, good test of ranking.",
+    "profile": {
+      "age": 30, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 150000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 60, "current_job_months": 24, "city_tier": "metro",
+      "cibil_score": 820, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 1000000, "requested_tenure_months": 36
+    }
+  },
+  {
+    "id": "P02_high_existing_emi_rejected_on_foir",
+    "description": "Decent income but existing EMI already eats most of it - should be rejected on FOIR at most FOIR-cap lenders.",
+    "profile": {
+      "age": 35, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 40000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 48, "current_job_months": 18, "city_tier": "tier2",
+      "cibil_score": 740, "existing_emi": 28000, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 300000, "requested_tenure_months": 48
+    }
+  },
+  {
+    "id": "P03_ntc_new_to_credit",
+    "description": "New-to-credit (cibil_score=0) applicant - should fail min_cibil gates everywhere that have one, even where allows_ntc isn't explicitly set.",
+    "profile": {
+      "age": 24, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 35000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 10, "current_job_months": 10, "city_tier": "tier1",
+      "cibil_score": 0, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 150000, "requested_tenure_months": 24
+    }
+  },
+  {
+    "id": "P04_govt_employee_sbi",
+    "description": "Govt employee - tests the employer_category=='govt' conditional income rule (SBI).",
+    "profile": {
+      "age": 40, "employment_type": "salaried", "employer_category": "govt",
+      "net_monthly_income": 60000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 120, "current_job_months": 60, "city_tier": "tier2",
+      "cibil_score": 780, "existing_emi": 5000, "salary_account_bank": "SBI",
+      "existing_customer_of": ["SBI"], "requested_amount": 800000, "requested_tenure_months": 60
+    }
+  },
+  {
+    "id": "P05_self_employed_out_of_scope",
+    "description": "Self-employed - should be rejected EVERYWHERE with the explicit scope-limit reason, not silently evaluated against salaried rules.",
+    "profile": {
+      "age": 38, "employment_type": "self_employed", "employer_category": "na",
+      "net_monthly_income": 90000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 96, "current_job_months": 96, "city_tier": "metro",
+      "cibil_score": 760, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 500000, "requested_tenure_months": 36
+    }
+  },
+  {
+    "id": "P06_near_age_cutoff",
+    "description": "Older applicant close to several lenders' max_age_at_maturity - tests the age-at-maturity gate using requested tenure.",
+    "profile": {
+      "age": 56, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 70000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 300, "current_job_months": 36, "city_tier": "tier1",
+      "cibil_score": 790, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 400000, "requested_tenure_months": 60
+    }
+  },
+  {
+    "id": "P07_idfc_kotak_multiplier_formula",
+    "description": "Mid income, moderate existing EMI - exercises the calculator-verified disposable-income-multiple formula lenders (IDFC, Kotak) against FOIR-cap lenders side by side.",
+    "profile": {
+      "age": 29, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 100000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 48, "current_job_months": 20, "city_tier": "metro",
+      "cibil_score": 760, "existing_emi": 5000, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 1500000, "requested_tenure_months": 48
+    }
+  },
+  {
+    "id": "P08_low_income_rejected_everywhere",
+    "description": "Below most lenders' minimum income floor - should produce mostly 'min_income failed' rejections.",
+    "profile": {
+      "age": 26, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 12000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 12, "current_job_months": 12, "city_tier": "tier3",
+      "cibil_score": 700, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 100000, "requested_tenure_months": 24
+    }
+  },
+  {
+    "id": "P09_rate_vs_fee_tradeoff",
+    "description": "Clean profile used specifically to check that ranking is by total_cost, not by advertised rate_min_pct (a lower-rate lender with a high fee should NOT automatically win).",
+    "profile": {
+      "age": 32, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 80000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 72, "current_job_months": 30, "city_tier": "metro",
+      "cibil_score": 800, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 500000, "requested_tenure_months": 36
+    }
+  },
+  {
+    "id": "P10_small_requested_amount_below_min_loan",
+    "description": "Requests a very small amount - tests the 'eligible amount below product min_loan' rejection path at the end of Stage 2.",
+    "profile": {
+      "age": 33, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 60000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 48, "current_job_months": 24, "city_tier": "tier2",
+      "cibil_score": 750, "existing_emi": 0, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 20000, "requested_tenure_months": 12
+    }
+  },
+  {
+    "id": "P11_fintech_quick_small_loan",
+    "description": "Profile shaped for fintech/NBFC digital lenders (Fibe, KreditBee) - modest income, short tenure request.",
+    "profile": {
+      "age": 25, "employment_type": "salaried", "employer_category": "pvt_ltd",
+      "net_monthly_income": 28000, "salary_credit_mode": "bank_transfer",
+      "total_work_exp_months": 14, "current_job_months": 8, "city_tier": "tier1",
+      "cibil_score": 710, "existing_emi": 2000, "salary_account_bank": null,
+      "existing_customer_of": [], "requested_amount": 80000, "requested_tenure_months": 12
+    }
+  }
+]
