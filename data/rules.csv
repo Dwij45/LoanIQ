@@ -12,14 +12,14 @@ SBI_R10,SBI,min_income,>=,20000,INR/month,employer_category == 'govt',https://sb
 SBI_R11,SBI,min_income,>=,25000,INR/month,otherwise,https://sbi.bank.in/web/personal-banking/loans/personal-loans/real-time-xpress-credit,2026-10-11,official,True,
 HDFC_R01,HDFC,min_age,>=,21,years,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
 HDFC_R02,HDFC,max_age_at_apply,<=,60,years,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
-HDFC_R03,HDFC,max_age_at_maturity,<=,60,years,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
+HDFC_R03,HDFC,max_age_at_maturity,<=,60,years,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,assumed,True,"max_age_at_maturity=60 is an ESTIMATE: no HDFC source states a maturity-age distinct from the apply-age cap of 60. Assumed equal to max_age_at_apply by analogy with other lenders in this dataset that publish only one age band (ICICI 58/58, LTFIN 58/58, Fibe 55/55)."
 HDFC_R04,HDFC,min_total_exp_months,>=,24,months,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
 HDFC_R05,HDFC,min_current_job_months,>=,12,months,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
 HDFC_R06,HDFC,min_cibil,>=,720,score,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,faq,True,"In FAQ text, not the bullet-point eligibility list (per this sheet's own confidence column)."
 HDFC_R07,HDFC,allows_ntc,==,True,bool,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
 HDFC_R08,HDFC,foir_cap,<=,0.5,ratio,,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
 HDFC_R09,HDFC,min_income,>=,25000,INR/month,employer_category == 'govt',https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,"Condition narrowed to 'govt' only - this lender's raw data distinguishes govt vs private income minimums, not finer employer categories (mnc/psu/sme), even though those exist as possible input_variables values."
-HDFC_R10,HDFC,min_income,>=,15000,INR/month,otherwise,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,official,True,
+HDFC_R10,HDFC,min_income,>=,15000,INR/month,otherwise,https://www.hdfc.bank.in/personal-loan/eligibility-criteria,2026-10-11,aggregator,True,"min_income=15000 (non-metro) sourced from BankBazaar's HDFC eligibility page, not HDFC's own site (which is JS-rendered and unreadable by this tool's fetch). BankBazaar also states the requirement rises to Rs 20,000/month in metro cities - not separately modeled here."
 ICICI_R01,ICICI,min_age,>=,20,years,,https://www.icici.bank.in/personal-banking/loans/personal-loan.html,2026-10-11,official,True,
 ICICI_R02,ICICI,max_age_at_apply,<=,58,years,,https://www.icici.bank.in/personal-banking/loans/personal-loan.html,2026-10-11,official,True,
 ICICI_R03,ICICI,max_age_at_maturity,<=,58,years,,https://www.icici.bank.in/personal-banking/loans/personal-loan.html,2026-10-11,official,True,
@@ -54,27 +54,27 @@ IDFC_R06,IDFC,min_cibil,>=,710,score,,https://www.idfcfirstbank.com/personal-ban
 IDFC_R07,IDFC,allows_ntc,==,False,bool,,https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried,2026-10-11,official,True,
 IDFC_R08,IDFC,min_income,>=,10000,INR/month,,https://www.idfcfirstbank.com/personal-banking/loans/personal-loan/personal-loan-for-salaried,2026-10-11,official,True,
 INDUSIND_R01,INDUSIND,min_age,>=,21,years,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
-INDUSIND_R02,INDUSIND,max_age_at_apply,<=,60,years,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
+INDUSIND_R02,INDUSIND,max_age_at_apply,<=,60,years,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,assumed,True,"max_age_at_apply=60 is an ESTIMATE: IndusInd's own eligibility page was unreadable (JS-rendered) and its blog gives '60' only as a generic industry example, not stated as IndusInd's own cutoff. Assumed equal to this dataset's existing max_age_at_maturity=60 for IndusInd."
 INDUSIND_R03,INDUSIND,max_age_at_maturity,<=,60,years,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
 INDUSIND_R04,INDUSIND,min_total_exp_months,>=,24,months,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
 INDUSIND_R05,INDUSIND,min_current_job_months,>=,12,months,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
 INDUSIND_R06,INDUSIND,min_cibil,>=,730,score,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
 INDUSIND_R07,INDUSIND,allows_ntc,==,False,bool,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
-INDUSIND_R08,INDUSIND,foir_cap,<=,0.5,ratio,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
+INDUSIND_R08,INDUSIND,foir_cap,<=,0.5,ratio,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,assumed,True,"foir_cap=0.50 is an ESTIMATE, not IndusInd's own published or calculator-derived figure. Assumed = median foir_cap of comparable private_bank lenders already verified in this dataset (HDFC 0.50, ICICI 0.45, AXIS 0.70 -> median 0.50)."
 INDUSIND_R09,INDUSIND,min_income,>=,25000,INR/month,,https://www.indusind.bank.in/in/en/personal/loans/personal-loan/education.html,2026-10-11,official,True,
 HSBC_R01,HSBC,min_age,>=,21,years,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,aggregator,True,"This sheet's own confidence column marks age as aggregator-estimate, not from an HSBC page directly."
 HSBC_R02,HSBC,max_age_at_apply,<=,60,years,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,official,True,
 HSBC_R03,HSBC,max_age_at_maturity,<=,60,years,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,official,True,
 HSBC_R04,HSBC,min_cibil,>=,700,score,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,official,True,
 HSBC_R05,HSBC,requires_salary_account,==,True,bool,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,official,True,
-HSBC_R06,HSBC,foir_cap,<=,0.5,ratio,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,official,True,
+HSBC_R06,HSBC,foir_cap,<=,0.5,ratio,,https://www.hsbc.co.in/loans/products/personal,2026-10-11,assumed,True,"foir_cap=0.50 is an ESTIMATE. HSBC publishes no FOIR figure and has no public eligibility calculator. Assumed = median foir_cap of comparable private_bank lenders (HDFC 0.50, ICICI 0.45, AXIS 0.70 -> median 0.50)."
 FEDERAL_R01,FEDERAL,min_age,>=,21,years,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 FEDERAL_R02,FEDERAL,max_age_at_apply,<=,55,years,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 FEDERAL_R03,FEDERAL,max_age_at_maturity,<=,60,years,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 FEDERAL_R04,FEDERAL,min_total_exp_months,>=,36,months,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 FEDERAL_R05,FEDERAL,min_current_job_months,>=,6,months,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 FEDERAL_R06,FEDERAL,min_cibil,>=,750,score,,https://www.federalbank.co.in/fedpremia,2026-10-11,estimate,True,"This sheet's own confidence column: estimate, and specific to Federal's digital epiFI product only, not the main product."
-FEDERAL_R07,FEDERAL,foir_cap,<=,0.5,ratio,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
+FEDERAL_R07,FEDERAL,foir_cap,<=,0.5,ratio,,https://www.federalbank.co.in/fedpremia,2026-10-11,assumed,True,"foir_cap=0.50 is an ESTIMATE. Federal Bank publishes no FOIR figure. Assumed = median foir_cap of comparable private_bank lenders (HDFC 0.50, ICICI 0.45, AXIS 0.70 -> median 0.50)."
 FEDERAL_R08,FEDERAL,min_income,>=,25000,INR/month,,https://www.federalbank.co.in/fedpremia,2026-10-11,official,True,
 BOB_R01,BOB,min_age,>=,21,years,,https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan,2026-10-11,official,True,
 BOB_R02,BOB,max_age_at_apply,<=,58,years,,https://bankofbaroda.bank.in/loans/personal-loan/baroda-personal-loan,2026-10-11,official,True,
@@ -102,7 +102,7 @@ UNION_R05,UNION,min_current_job_months,>=,6,months,,https://unionbankofindia.co.
 UNION_R06,UNION,min_cibil,>=,700,score,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,official,True,
 UNION_R07,UNION,requires_salary_account,==,True,bool,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,official,True,
 UNION_R08,UNION,allows_ntc,==,False,bool,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,official,True,
-UNION_R09,UNION,foir_cap,<=,0.6,ratio,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,official,True,
+UNION_R09,UNION,foir_cap,<=,0.6,ratio,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,assumed,True,"foir_cap=0.60 is an ESTIMATE. Union Bank's own eligibility content was unreachable. Assumed = median foir_cap of comparable psu_bank lenders (SBI 0.65, BOB 0.40, PNB 0.60 -> median 0.60)."
 UNION_R10,UNION,min_income,>=,15000,INR/month,,https://unionbankofindia.co.in/english/p-r-personalloan-govtorg.aspx,2026-10-11,official,True,
 YESBANK_R01,YESBANK,min_age,>=,21,years,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
 YESBANK_R02,YESBANK,max_age_at_apply,<=,60,years,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
@@ -111,7 +111,7 @@ YESBANK_R04,YESBANK,min_total_exp_months,>=,12,months,,https://www.yesbank.in/pe
 YESBANK_R05,YESBANK,min_current_job_months,>=,12,months,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
 YESBANK_R06,YESBANK,min_cibil,>=,700,score,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
 YESBANK_R07,YESBANK,allows_ntc,==,False,bool,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
-YESBANK_R08,YESBANK,foir_cap,<=,0.5,ratio,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
+YESBANK_R08,YESBANK,foir_cap,<=,0.5,ratio,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,assumed,True,"foir_cap=0.50 is an ESTIMATE. No Yes Bank FOIR figure or working calculator was found. Assumed = median foir_cap of comparable private_bank lenders (HDFC 0.50, ICICI 0.45, AXIS 0.70 -> median 0.50)."
 YESBANK_R09,YESBANK,min_income,>=,25000,INR/month,,https://www.yesbank.in/personal-banking/yes-individual/loans/personal-loan,2026-10-11,official,True,
 BAJAJ_R01,BAJAJ,min_age,>=,21,years,,https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years,2026-10-11,official,True,
 BAJAJ_R02,BAJAJ,max_age_at_apply,<=,80,years,,https://www.bajajfinserv.in/personal-loan-of-5-lakh-for-3-years,2026-10-11,official,True,
@@ -138,7 +138,7 @@ HDBFS_R04,HDBFS,min_total_exp_months,>=,12,months,,https://paisabazaar.com/hdb/p
 HDBFS_R05,HDBFS,min_current_job_months,>=,12,months,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,aggregator,True,
 HDBFS_R06,HDBFS,min_cibil,>=,750,score,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,aggregator,True,
 HDBFS_R07,HDBFS,allows_ntc,==,False,bool,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,aggregator,True,
-HDBFS_R08,HDBFS,foir_cap,<=,0.65,ratio,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,aggregator,True,
+HDBFS_R08,HDBFS,foir_cap,<=,0.65,ratio,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,assumed,True,"foir_cap=0.65 is an ESTIMATE. HDB Financial Services publishes no FOIR figure. Assumed = median foir_cap of comparable nbfc lenders (BAJAJ 0.75, TATACAP 0.55, POONAWALLA 0.65 -> median 0.65)."
 HDBFS_R09,HDBFS,min_income,>=,20000,INR/month,,https://paisabazaar.com/hdb/personal-loan,2026-10-11,aggregator,True,
 POONAWALLA_R01,POONAWALLA,min_age,>=,22,years,,https://poonawallafincorp.com/20-lakh-personal-loan.php,2026-10-11,official,True,
 POONAWALLA_R02,POONAWALLA,max_age_at_apply,<=,57,years,,https://poonawallafincorp.com/20-lakh-personal-loan.php,2026-10-11,official,True,
@@ -156,7 +156,7 @@ LTFIN_R04,LTFIN,min_total_exp_months,>=,12,months,,https://www.ltfinance.com/per
 LTFIN_R05,LTFIN,min_current_job_months,>=,12,months,,https://www.ltfinance.com/personal-loan,2026-10-11,official,True,
 LTFIN_R06,LTFIN,min_cibil,>=,700,score,,https://www.ltfinance.com/personal-loan,2026-10-11,official,True,
 LTFIN_R07,LTFIN,allows_ntc,==,False,bool,,https://www.ltfinance.com/personal-loan,2026-10-11,official,True,
-LTFIN_R08,LTFIN,foir_cap,<=,0.65,ratio,,https://www.ltfinance.com/personal-loan,2026-10-11,official,True,
+LTFIN_R08,LTFIN,foir_cap,<=,0.65,ratio,,https://www.ltfinance.com/personal-loan,2026-10-11,assumed,True,"foir_cap=0.65 is an ESTIMATE, distinct from the documented attempt to reverse-engineer L&T Finance's own calculator (which produced unreliable/buggy output). Assumed = median foir_cap of comparable nbfc lenders (BAJAJ 0.75, TATACAP 0.55, POONAWALLA 0.65 -> median 0.65)."
 LTFIN_R09,LTFIN,min_income,>=,25000,INR/month,,https://www.ltfinance.com/personal-loan,2026-10-11,official,True,
 Fibe_R01,Fibe,min_age,>=,19,years,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
 Fibe_R02,Fibe,max_age_at_apply,<=,55,years,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
@@ -165,7 +165,7 @@ Fibe_R04,Fibe,min_total_exp_months,>=,24,months,,https://www.fibe.in/personal-lo
 Fibe_R05,Fibe,min_current_job_months,>=,12,months,,https://www.fibe.in/personal-loan/,2026-10-11,estimate,True,
 Fibe_R06,Fibe,min_cibil,>=,650,score,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
 Fibe_R07,Fibe,allows_ntc,==,True,bool,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
-Fibe_R08,Fibe,foir_cap,<=,0.5,ratio,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
+Fibe_R08,Fibe,foir_cap,<=,0.5,ratio,,https://www.fibe.in/personal-loan/,2026-10-11,assumed,True,"foir_cap=0.50 is an ESTIMATE and is NOT Fibe-specific - no fintech lender in this dataset has a verified foir_cap to take a median from. Basis is Fibe's own blog, which states most Indian lenders cap FOIR between 40% and 55%; 50% (midpoint) used as a sector-generic placeholder."
 Fibe_R09,Fibe,min_income,>=,20000,INR/month,,https://www.fibe.in/personal-loan/,2026-10-11,official,True,
 KREDITBEE_R01,KREDITBEE,min_age,>=,21,years,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
 KREDITBEE_R02,KREDITBEE,max_age_at_apply,<=,60,years,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
@@ -174,7 +174,7 @@ KREDITBEE_R04,KREDITBEE,min_total_exp_months,>=,12,months,,https://www.paisabaza
 KREDITBEE_R05,KREDITBEE,min_current_job_months,>=,2,months,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
 KREDITBEE_R06,KREDITBEE,min_cibil,>=,670,score,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
 KREDITBEE_R07,KREDITBEE,allows_ntc,==,True,bool,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
-KREDITBEE_R08,KREDITBEE,foir_cap,<=,0.5,ratio,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
+KREDITBEE_R08,KREDITBEE,foir_cap,<=,0.5,ratio,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,assumed,True,foir_cap=0.50 is an ESTIMATE and is NOT KreditBee-specific - no fintech lender in this dataset has a verified foir_cap to take a median from. Basis is the generic 40-55% industry FOIR-cap range; 50% (midpoint) used as a sector-generic placeholder.
 KREDITBEE_R09,KREDITBEE,min_income,>=,10000,INR/month,,https://www.paisabazaar.com/personal-loan/kreditbee,2026-10-11,aggregator,True,
 LTFIN_R10,LTFIN,min_income,>=,25000,INR/month,city_tier == 'tier1',https://www.ltfinance.com/blog/personal-loan/minimum-salary-for-personal-loan,2026-10-11,official,True,
 LTFIN_R11,LTFIN,min_income,>=,15000,INR/month,"city_tier in [tier2,tier3]",https://www.ltfinance.com/blog/personal-loan/minimum-salary-for-personal-loan,2026-10-11,official,True,
