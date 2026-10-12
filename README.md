@@ -3,6 +3,7 @@
 Rule-based (not ML) eligibility engine for personal loans across 20
 Indian lenders, built on `data/lenders.csv` + `data/rules.csv`.
 
+LIVE AT : https://dwij45.github.io/LoanIQ/
 ## Run it
 
 ```
