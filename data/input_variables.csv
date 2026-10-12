@@ -1,0 +1,20 @@
+variable,type,unit,allowed_values,source,evidence,description
+age,int,years,>=18,applicant,Aadhaar/PAN,Applicant's current age
+employment_type,enum,-,"salaried,self_employed,pensioner",applicant,applicant declaration,Nature of employment
+employer_category,enum,-,"govt,psu,mnc,pvt_ltd,sme,na",applicant,applicant declaration,Type of employer
+net_monthly_income,int,INR,> 0,document,salary slip / ITR/12,Net take-home monthly income
+salary_credit_mode,enum,-,"bank_transfer,cash",document,bank statement,How salary is paid
+total_work_exp_months,int,months,>=0,applicant,applicant declaration,Total years worked
+current_job_months,int,months,>=0,applicant,applicant declaration,Months in current job
+city,text,-,-,applicant,applicant declaration,City of residence
+city_tier,enum,-,"metro,tier1,tier2,tier3",derived,city_tiers lookup,Derived from city
+education_level,enum,-,"below_grad,graduate,postgrad",applicant,applicant declaration,Highest qualification
+cibil_score,int,score,"300-900, 0=NTC",bureau,CIBIL report,Credit bureau score
+existing_emi,int,INR/month,>=0,bureau,CIBIL report + applicant,Sum of current EMIs
+salary_account_bank,text,-,-,applicant,applicant declaration,"Bank holding salary account, if any"
+existing_customer_of,list,-,list of lender_id,applicant,applicant declaration,Lenders applicant already banks with
+requested_amount,int,INR,>0,applicant,applicant declaration,Loan amount requested
+requested_tenure_months,int,months,>0,applicant,applicant declaration,Tenure requested
+is_ntc,bool,-,true/false,derived,cibil_score == 0,New-to-credit flag
+age_at_maturity,float,years,-,derived,age + tenure/12,Age when loan matures
+foir,float,ratio,0-1,derived,(existing_emi+new_emi)/income,Fixed obligation to income ratio

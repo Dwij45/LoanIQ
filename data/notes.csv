@@ -1,0 +1,26 @@
+HOW TO READ THIS SHEET,
+Blue text,Values typed from sources (edit freely).
+Light-yellow cell,"Not found. Blank means UNKNOWN, not zero. The yellow clears when you fill the cell."
+date_updated,Day the sources were read (2026-10-11). Most lender pages do not show their own 'last updated' date. SBI's Digi PL page showed 28-09-2026.
+rules_filled,How many of the 26 rule columns have a value (a quick completeness check).
+Stricter value rule,"When two sources disagree, the stricter value is stored and the disagreement is written in notes and confidence."
+Stored vs guidance,"Some numbers are lender guidance, not cutoffs (e.g. 'CIBIL 750 preferred', ICICI FOIR 40-45%). notes says when this applies."
+min_income_private,Your header said 'min_income_private(alaried)'; renamed to min_income_private. It means salaried private/corporate employees.
+HOW THE 20 LENDERS WERE CHOSEN,
+Mix,"5 PSU banks, 8 private banks (incl. HSBC), 5 NBFCs and 2 fintech/marketplace lenders, so govt, MNC and lower-score profiles each have possible matches."
+Source,Names are the largest and most-compared personal loan lenders in the plan you shared (Mint / Paisabazaar / BankBazaar roundups). ICICI was added (it was in the original list but missing from your latest one) to reach 20.
+Fintech pick,"KreditBee was chosen from 'KreditBee / CASHe / LazyPay'. Its own site was not retrieved, so it is all aggregator estimates; drop it if you cannot confirm public criteria."
+DATA QUALITY (be honest about this in the README),
+Mostly official pages,"SBI, HDFC, ICICI, Axis, Kotak, IndusInd, HSBC, Federal, Bank of Baroda, Union (partly), Bajaj, Tata Capital, Poonawalla, L&T, Moneyview, IDFC."
+Aggregator only,"PNB, HDB Financial, KreditBee (official pages not retrieved)."
+Mostly blank,"Canara Bank: only stale aggregator values were found, so none were stored."
+Never published by any lender,"salary_multiple (except SBI 30x) and foir_cap (except SBI 0.65, ICICI guidance 0.45) and rate_typical_pct. Reverse-engineer from eligibility calculators or leave blank; do not invent."
+NEXT STEPS,
+1,Open each lender's own eligibility page and FAQ and confirm every value marked as aggregator or conflict.
+2,"Fill the yellow cells that matter most: max_age_at_maturity, min_cibil, foir_cap, salary_multiple."
+3,Try each lender's eligibility calculator with incomes of 25k / 50k / 1L and with 0 and 10k existing EMI to infer salary_multiple and foir_cap (flag as estimate).
+"CHECK PASS - 12 OCT 2026 (FOIR, late_penalty, allows_ntc)",
+Late penalty filled,"SBI=2% p.a. (sbi.co.in), HDFC=24% p.a./2%pm (fixed corrupted date cell, hdfc.bank.in), Union=2% p.a. (own penal-charges PDF), Tata Capital=36% p.a./3%pm (tatacapital.com). All 4 are official, lender-stated figures."
+Late penalty still blank,"ICICI, Axis, HSBC, Federal, BOB, PNB, Yes Bank, HDBFS, KreditBee - checked official pages/PDFs where available; no lender-specific personal-loan late-payment rate was published. See per-row notes for what was checked."
+FOIR cap still blank,"Kotak, IDFC, IndusInd, HSBC, Federal, Union, Yes Bank, HDBFS, L&T, Fibe, KreditBee - checked, including each lender's own FOIR-explainer blog where one exists. None states its own cap. Only SBI (0.65) and ICICI (0.45, guidance not cutoff) publish this anywhere - this is a genuine data gap across the industry, not a collection miss. Reverse-engineer via calculators in a later pass if needed; do not invent."
+allows_ntc still blank,"ICICI, Axis, Kotak, IDFC, IndusInd, HSBC, Federal, BOB, PNB, Union, Yes Bank, HDBFS - no lender-specific statement found. Context: RBI Master Direction (6 Jan 2025) says first-time borrowers should not be rejected solely for lack of credit history - this is general guidance across all lenders, not a per-lender policy, so it was not used to fill any single lender's cell."
